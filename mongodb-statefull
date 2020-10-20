@@ -1,0 +1,53 @@
+    role: mongo
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+ name: mongo
+spec:
+ serviceName: "mongo"
+ replicas: 3
+ selector:
+   matchLabels:
+     role: mongo
+ template:
+   metadata:
+     labels:
+       role: mongo
+       environment: test
+       #This label will be used by openebs to place in replica
+       # pod anti-affinity to make sure data of different mongo
+       # instances are not co-located on the same node
+       openebs.io/replica-anti-affinity: vehicle-db
+   spec:
+     terminationGracePeriodSeconds: 10
+     containers:
+       - name: mongo
+         image: mongo:4.0
+         command:
+           - mongod
+           - "--replSet"
+           - rs0
+           - "--smallfiles"
+           - "--noprealloc"
+         ports:
+           - containerPort: 27017
+         volumeMounts:
+           - name: mongo-persistent-storage
+             mountPath: /data/db
+       - name: mongo-sidecar
+         image: cvallance/mongo-k8s-sidecar
+         env:
+           - name: MONGO_SIDECAR_POD_LABELS
+             value: "role=mongo,environment=test"
+ volumeClaimTemplates:
+ - metadata:
+     name: mongo-persistent-storage
+     annotations:
+        volume.beta.kubernetes.io/storage-class: "fast"
+   spec:
+     accessModes:
+       - ReadWriteOnce
+     resources:
+       requests:
+          storage: 100Gi
