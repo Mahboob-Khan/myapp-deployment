@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-v2
+spec:
+  selector:
+    matchLabels:
+      app: hello-v2
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: hello-v2
+    spec:
+      containers:
+      - name: hellov2
+        image: "gcr.io/google-samples/hello-app:2.0"
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-v2-svc
+  labels: 
+    app: hello-v2
+spec:
+  type: NodePort 
+  selector:
+    app: hello-v2
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+---
+apiVersion: apps/v1
+kind:  Deployment
+metadata:
+  name: hello
+  labels:
+    app: hello
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello
+  template:
+    metadata:
+      labels:
+        app: hello
+    spec:
+      containers:
+        - name: nginx
+          image: gcr.io/google-samples/hello-app:1.0
+          ports:
+          - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-svc
+  labels: 
+    app: hello
+spec:
+  type: NodePort 
+  selector:
+    app: hello
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP  
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: myingress
+spec:
+  rules:
+    - http:
+        paths:
+        - path: /hello
+          backend:
+            serviceName: hello-svc
+            servicePort: 8080
+        - path: /hello-v2
+          backend:
+            serviceName: hello-v2-svc
+            servicePort: 8080
+
+$ kubectl get po,svc,ing
+NAME                                       READY   STATUS    RESTARTS   AGE
+pod/hello-69c5bf78bb-stcrb                 1/1     Running   0          17h
+pod/hello-v2-848b896ccd-xfd48              1/1     Running   0          17h
+
+NAME                                TYPE           CLUSTER-IP     EXTERNAL-IP      PORT(S)          AGE
+service/hello-svc                   NodePort       10.72.4.172    <none>           8080:31887/TCP   17h
+service/hello-v2-svc                NodePort       10.72.10.199   <none>           8080:31397/TCP   17h
+service/kubernetes                  ClusterIP      10.72.0.1      <none>           443/TCP          50d
+
+
+NAME                               HOSTS   ADDRESS          PORTS   AGE
+ingress.extensions/myingress       *       34.120.54.227    80      17h
