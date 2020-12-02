@@ -1,0 +1,35 @@
+SSH from Linux to Debian using Python
+
+[mdmahboob@instance-5 ~]$ cat sshaccess.sh 
+#!/usr/bin/env python
+
+import paramiko 
+
+ssh = paramiko.SSHClient()
+ssh.load_system_host_keys()
+ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+print ('Connecting')
+
+ssh.connect('34.66.151.250', username='mdmahboob', password='*******',port=22)
+#ssh.connect('34.67.114.147', username='mdmahboob', password='*******',port=22)
+
+print('Connected')
+
+stdin, stdout, stderr = ssh.exec_command('free -m')
+
+print (stdout.read())
+
+print (std.err.read())
+[mdmahboob@instance-5 ~]$ 
+
+
+
+[mdmahboob@instance-5 ~]$ ./sshaccess.sh 
+connecting
+connected
+              total        used        free      shared  buff/cache   available
+Mem:           3536         192        3188           8         155        3146
+Swap:             0           0           0
+
+[mdmahboob@instance-5 ~]$ 
