@@ -18,9 +18,6 @@ print('Connected')
 
 stdin, stdout, stderr = ssh.exec_command('free -m')
 
-print (stdout.read())
-
-print (std.err.read())
 [mdmahboob@instance-5 ~]$ 
 
 
